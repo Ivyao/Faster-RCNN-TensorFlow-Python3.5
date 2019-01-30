@@ -13,11 +13,7 @@ This is the branch to compile Faster R-CNN on Windows. It is heavily inspired by
 
 3- Checkout this branch
 
-4- Go to  ./data/coco/PythonAPI
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run `python setup.py build_ext --inplace`
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run `python setup.py build_ext install`
+4- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run `install.sh`
 
 5- Follow this instruction to download PyCoco database. [Link]( https://github.com/rbgirshick/py-faster-rcnn#beyond-the-demo-installation-for-training-and-testing-models)
 
