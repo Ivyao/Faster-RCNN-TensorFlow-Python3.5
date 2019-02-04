@@ -208,3 +208,77 @@ class Train:
 if __name__ == '__main__':
     train = Train()
     train.train()
+	
+	
+	
+	
+CLASSES = {'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
+        'electric guitar':'n03272010', 'sax':'n04141076', 'ocarina':'n03840681', 'harmonica':'n03494278',\
+        'acoustic guitar':'n02676566', 'trombone':'n04487394','gong':'n03447721',\
+        'maraca':'n03720891', 'xylophone':'n03721384', 'pianoforte':'n03928116'}
+
+'''
+Given the wnid of a synset, the URLs of its images can be obtained at
+http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=[wnid]
+'''
+IMGS_URL='http://www.image-net.org/api/text/imagenet.synset.geturls.getmapping?wnid={wnid}'
+ANN_URL='http://www.image-net.org/api/download/imagenet.bbox.synset?wnid={wnid}'
+
+#n03447721_39009 http://www.musik-klier.de/prods/Stagg-Gong%2020%20klein.jpg
+import requests
+from os import linesep
+import os.path
+import logging
+import urllib3
+
+IMAGES_FOLDER = os.path.join('data', 'imagenet', 'imgs')
+ANNOTATIONS_FOLDER = os.path.join('data', 'imagenet', 'Annotation')
+
+for code in CLASSES.values():
+    image_urls_req = requests.get(IMGS_URL.format(wnid=code))
+
+    print(image_urls_req)
+
+    image_urls_line = image_urls_req.text.split(linesep)
+
+    # iterating over each image in the retrieved text file
+    for line in image_urls_line:
+        # splitting line over spaces
+        line_list = line.split()
+        
+        # the first element will contain the id of the image, the second one the url        
+        if len(line_list) != 2:
+            logging.error(len(line_list))
+            continue
+
+        logging.error('list > 2')
+
+        image_id = line_list[0]
+        image_url = line_list[1]
+
+        logging.error('image_id = '+ image_id)
+        logging.error('image_url = '+ image_url)
+
+        # checking if exists the annotation file
+        if not os.path.exists(os.path.join(ANNOTATIONS_FOLDER, image_id + '.xml')):
+            logging.error('annotation does not exist')
+            continue
+
+        # retrieving image
+        image_request = requests.get(image_url)
+        # checking if exists the image in the given url
+        if image_request.status_code == 404:
+            logging.error('image missing (404)')
+            continue
+
+        http = urllib3.PoolManager()
+
+        image_request = http.request('GET', image_url)
+        
+        # image_request = urllib3.urlopen(image_url)   
+        if image_request.status == 404:
+            continue
+
+        with open(os.path.join(IMAGES_FOLDER, image_id + '.jpg'), 'wb') as f:
+            f.write(image_request.data)
+	
