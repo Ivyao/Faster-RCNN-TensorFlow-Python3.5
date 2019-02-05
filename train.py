@@ -66,8 +66,9 @@ class Train:
         else:
             raise NotImplementedError
 
-        self.imdb, self.roidb = combined_roidb("voc_2007_trainval")
-
+        #self.imdb, self.roidb = combined_roidb("voc_2007_trainval")
+        self.imdb, self.roidb = combined_roidb("imagenet_2007_trainval")
+            
         self.data_layer = RoIDataLayer(self.roidb, self.imdb.num_classes)
         self.output_dir = cfg.get_output_dir(self.imdb, 'default')
 
@@ -231,8 +232,16 @@ import os.path
 import logging
 import urllib3
 
-IMAGES_FOLDER = os.path.join('data', 'imagenet', 'imgs')
-ANNOTATIONS_FOLDER = os.path.join('data', 'imagenet', 'Annotation')
+IMAGENET_FOLDER = os.path.join('data', 'imagenet')
+IMAGES_FOLDER = os.path.join(IMAGENET_FOLDER, 'JPEGImages')
+ANNOTATIONS_FOLDER = os.path.join(IMAGENET_FOLDER, 'Annotation')
+
+def is_jpg(filename):
+    try:
+        i=Image.open(filename)
+        return i.format =='JPEG'
+    except IOError:
+        return False
 
 for code in CLASSES.values():
     image_urls_req = requests.get(IMGS_URL.format(wnid=code))
@@ -265,10 +274,14 @@ for code in CLASSES.values():
             continue
 
         # retrieving image
-        image_request = requests.get(image_url)
-        # checking if exists the image in the given url
-        if image_request.status_code == 404:
-            logging.error('image missing (404)')
+        try:
+            image_request = requests.get(image_url)
+        except requests.exceptions.ConnectionError:
+            continue
+        
+        # checking if exists the image in the given url 
+        if image_request.status_code != 200:
+            logging.error('image problems, code ' + str(image_request.status_code))
             continue
 
         http = urllib3.PoolManager()
@@ -279,6 +292,11 @@ for code in CLASSES.values():
         if image_request.status == 404:
             continue
 
-        with open(os.path.join(IMAGES_FOLDER, image_id + '.jpg'), 'wb') as f:
+        image_filename = os.path.join(IMAGES_FOLDER, image_id + '.jpg')
+        with open(image_filename, 'wb') as f:
             f.write(image_request.data)
+
+        # checking if the data contains a jpg 
+        if not is_jpg(image_filename):
+            os.remove(image_filename)
 	

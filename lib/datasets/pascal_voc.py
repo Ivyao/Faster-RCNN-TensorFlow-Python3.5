@@ -20,22 +20,33 @@ import scipy.sparse
 from lib.config import config as cfg
 from lib.datasets.imdb import imdb
 from .voc_eval import voc_eval
-
+from train import IMAGENET_FOLDER
+from train import CLASSES
 
 class pascal_voc(imdb):
-    def __init__(self, image_set, year, devkit_path=None):
+    def __init__(self, image_set, year='', devkit_path=None, imagenet=False):
         imdb.__init__(self, 'voc_' + year + '_' + image_set)
         self._year = year
         self._image_set = image_set
         self._devkit_path = self._get_default_path() if devkit_path is None \
             else devkit_path
-        self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
-        self._classes = ('__background__',  # always index 0
-                         'aeroplane', 'bicycle', 'bird', 'boat',
-                         'bottle', 'bus', 'car', 'cat', 'chair',
-                         'cow', 'diningtable', 'dog', 'horse',
-                         'motorbike', 'person', 'pottedplant',
-                         'sheep', 'sofa', 'train', 'tvmonitor')
+        
+        if imagenet:
+            self._data_path = IMAGENET_FOLDER # os.path.join(self._devkit_path, 'VOC' + self._year)
+            
+            # TODO: check if __background__ should be placed in tuple      
+            self._classes = tuple(CLASSES.keys()) 
+
+        else:        
+            self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)        
+            self._classes = ('__background__',  # always index 0
+                            'aeroplane', 'bicycle', 'bird', 'boat',
+                            'bottle', 'bus', 'car', 'cat', 'chair',
+                            'cow', 'diningtable', 'dog', 'horse',
+                            'motorbike', 'person', 'pottedplant',
+                            'sheep', 'sofa', 'train', 'tvmonitor')
+
+            
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()

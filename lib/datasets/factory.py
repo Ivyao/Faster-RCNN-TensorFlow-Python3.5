@@ -20,6 +20,7 @@ import numpy as np
 for year in ['2007', '2012']:
   for split in ['train', 'val', 'trainval', 'test']:
     name = 'voc_{}_{}'.format(year, split)
+    print(name)
     __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
 
 # Set up coco_2014_<split>
@@ -34,6 +35,9 @@ for year in ['2015']:
     name = 'coco_{}_{}'.format(year, split)
     __sets[name] = (lambda split=split, year=year: coco(split, year))
 
+# split is a chosen string like trainval etc
+name = 'coco_{}_{}'.format(year, split)
+__sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""
