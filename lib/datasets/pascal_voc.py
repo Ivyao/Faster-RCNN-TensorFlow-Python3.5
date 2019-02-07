@@ -20,8 +20,8 @@ import scipy.sparse
 from lib.config import config as cfg
 from lib.datasets.imdb import imdb
 from .voc_eval import voc_eval
-from train import IMAGENET_FOLDER
-from train import CLASSES
+from lib.datasets.imagenet import IMAGENET_FOLDER
+from lib.datasets.imagenet import CLASSES
 
 class pascal_voc(imdb):
     def __init__(self, image_set, year='', devkit_path=None, imagenet=False):
@@ -35,7 +35,7 @@ class pascal_voc(imdb):
             self._data_path = IMAGENET_FOLDER # os.path.join(self._devkit_path, 'VOC' + self._year)
             
             # TODO: check if __background__ should be placed in tuple      
-            self._classes = tuple(CLASSES.keys()) 
+            self._classes = tuple(CLASSES.values()) 
 
         else:        
             self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)        
@@ -49,9 +49,14 @@ class pascal_voc(imdb):
             
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.jpg'
+
+        # image_index will contain the index of all the images contained in this set
         self._image_index = self._load_image_set_index()
+
         # Default to roidb handler
+        # gt_roidb is a list with all annotations 
         self._roidb_handler = self.gt_roidb
+
         self._salt = str(uuid.uuid4())
         self._comp_id = 'comp4'
 
@@ -102,6 +107,7 @@ class pascal_voc(imdb):
         Return the default path where PASCAL VOC is expected to be installed.
         """
         return os.path.join(cfg.FLAGS2["data_dir"], 'VOCdevkit' + self._year)
+        # return os.path.join(cfg.FLAGS2["data_dir"], 'imagenet')
 
     def gt_roidb(self):
         """
