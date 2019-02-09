@@ -1,4 +1,4 @@
-CLASSES = {'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
+CLASSES = {'__background__':'__background__' ,'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
         'electric guitar':'n03272010', 'sax':'n04141076', 'ocarina':'n03840681', 'harmonica':'n03494278',\
         'acoustic guitar':'n02676566', 'trombone':'n04487394','gong':'n03447721',\
         'maraca':'n03720891', 'xylophone':'n03721384', 'pianoforte':'n03928116'}
@@ -38,15 +38,7 @@ def is_jpg(filename):
         return False
 
 def load_imagenet_dataset(partition_names):
-    index = 0
-
-    # n_partitions = len(partition_names)
-
-    # open_files = {}
-    # for partition_name in partition_names:
-    #     open_files[partition_name] = open(os.path.join(PARTITION_FOLDER, partition_name + '.txt'))
-    #     for class_name in CLASSES.keys():
-    #         open(os.path.join(PARTITION_FOLDER, class_name + '_' + partition_name + '.txt'))
+    index = 1
 
     loaded_images = []
 
@@ -72,12 +64,12 @@ def load_imagenet_dataset(partition_names):
             image_id = line_list[0]
             image_url = line_list[1]
 
-            logging.error('image_id = '+ image_id)
-            logging.error('image_url = '+ image_url)
+            # logging.error('image_id = '+ image_id)
+            # logging.error('image_url = '+ image_url)
 
             # checking if exists the annotation file
             if not os.path.exists(os.path.join(ANNOTATIONS_FOLDER_SRC, image_id + '.xml')):
-                logging.error('annotation does not exist')
+                # logging.error('annotation does not exist')
                 continue
 
             # retrieving image
@@ -88,7 +80,7 @@ def load_imagenet_dataset(partition_names):
             
             # checking if exists the image in the given url 
             if image_request.status_code != 200:
-                logging.error('image problems, code ' + str(image_request.status_code))
+                # logging.error('image problems, code ' + str(image_request.status_code))
                 continue
 
             image_request = http.request('GET', image_url)
@@ -111,20 +103,24 @@ def load_imagenet_dataset(partition_names):
                     os.path.join(ANNOTATIONS_FOLDER_DST, index_string + '.xml'))
             index+=1
 
+            if index%5 == 0:
+                print("Downloaded " + str(index) + " images")
+
             loaded_images.append((index_string, code, random.randint(0,1)))
             
+            # in this case we try to download just an image for each class
             if TEST and index > 0:
                break
-
+    
     part_0 = open(os.path.join(PARTITION_FOLDER, partition_names[0] + '.txt'), 'w')
     part_1 = open(os.path.join(PARTITION_FOLDER, partition_names[1] + '.txt'), 'w')
 
     #doMagic
     for elem in loaded_images:
         if elem[2] == 0:
-            part_0.write('{}'.format(elem[0]))
+            part_0.write('{}\n'.format(elem[0]))
         else:    
-            part_1.write('{}'.format(elem[0]))
+            part_1.write('{}\n'.format(elem[0]))
 
     part_0.close()
     part_1.close()
@@ -135,11 +131,11 @@ def load_imagenet_dataset(partition_names):
 
         for elem in loaded_images:
             if elem[2] == 0:
-                part_0.write('{} {}'.format(elem[0], 1 if(elem[1] == class_name) else -1))
+                part_0.write('{} {}\n'.format(elem[0], 1 if(elem[1] == class_name) else -1))
             else:    
-                part_1.write('{} {}'.format(elem[0], 1 if(elem[1] == class_name) else -1))
+                part_1.write('{} {}\n'.format(elem[0], 1 if(elem[1] == class_name) else -1))
         part_0.close()
         part_1.close()
 
-
-load_imagenet_dataset(["test", "train"])
+if not TEST:
+    load_imagenet_dataset(["test", "train"])

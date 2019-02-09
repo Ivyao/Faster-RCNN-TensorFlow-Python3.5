@@ -28,14 +28,15 @@ class pascal_voc(imdb):
         imdb.__init__(self, 'voc_' + year + '_' + image_set)
         self._year = year
         self._image_set = image_set
+        self.imagenet = imagenet
         self._devkit_path = self._get_default_path() if devkit_path is None \
             else devkit_path
         
-        if imagenet:
+        if self.imagenet:
             self._data_path = IMAGENET_FOLDER # os.path.join(self._devkit_path, 'VOC' + self._year)
             
             # TODO: check if __background__ should be placed in tuple      
-            self._classes = tuple(CLASSES.values()) 
+            self._classes = tuple(['__background__'] + list(CLASSES.values()))
 
         else:        
             self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)        
@@ -106,8 +107,10 @@ class pascal_voc(imdb):
         """
         Return the default path where PASCAL VOC is expected to be installed.
         """
-        return os.path.join(cfg.FLAGS2["data_dir"], 'VOCdevkit' + self._year)
-        # return os.path.join(cfg.FLAGS2["data_dir"], 'imagenet')
+        if not self.imagenet:
+            return os.path.join(cfg.FLAGS2["data_dir"], 'VOCdevkit' + self._year)
+        else:
+            return os.path.join(cfg.FLAGS2["data_dir"], 'imagenet')
 
     def gt_roidb(self):
         """
@@ -116,14 +119,14 @@ class pascal_voc(imdb):
         This function loads/saves from/to a cache file to speed up future calls.
         """
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
-        if os.path.exists(cache_file):
-            with open(cache_file, 'rb') as fid:
-                try:
-                    roidb = pickle.load(fid)
-                except:
-                    roidb = pickle.load(fid, encoding='bytes')
-            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
-            return roidb
+        # if os.path.exists(cache_file):
+        #     with open(cache_file, 'rb') as fid:
+        #         try:
+        #             roidb = pickle.load(fid)
+        #         except:
+        #             roidb = pickle.load(fid, encoding='bytes')
+        #     print('{} gt roidb loaded from {}'.format(self.name, cache_file))
+        #     return roidb
 
         gt_roidb = [self._load_pascal_annotation(index)
                     for index in self.image_index]

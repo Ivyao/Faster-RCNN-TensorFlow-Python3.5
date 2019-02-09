@@ -66,7 +66,7 @@ class Train:
         else:
             raise NotImplementedError
 
-        #self.imdb, self.roidb = combined_roidb("voc_2007_trainval")
+        # self.imdb, self.roidb = combined_roidb("voc_2007_trainval")
         self.imdb, self.roidb = combined_roidb("imagenet_2007_train")
             
         self.data_layer = RoIDataLayer(self.roidb, self.imdb.num_classes)

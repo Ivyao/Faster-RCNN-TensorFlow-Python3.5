@@ -38,9 +38,9 @@ for year in ['2015']:
 # split is a chosen string like trainval etc
 # name = 'coco_{}_{}'.format(year, split)
 # __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
-for year in ['2015']:
+for year in ['2007']:
   for split in ['train']:
-    name = 'imagenet_2007_{}'.format(split)
+    name = 'imagenet_{}_{}'.format(year,split)
     __sets[name] = (lambda split=split, year=year: pascal_voc(split, year, imagenet=True))
 
 def get_imdb(name):
