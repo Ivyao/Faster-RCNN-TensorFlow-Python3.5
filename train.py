@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
 
+
 import lib.config.config as cfg
 from lib.datasets import roidb as rdl_roidb
 from lib.datasets.factory import get_imdb
@@ -17,6 +18,10 @@ try:
 except ImportError:
   import pickle
 import os
+import sys
+sys.tracebacklimit = 0
+
+LOGDIR = os.path.join('tensorboard')
 
 def get_training_roidb(imdb):
     """Returns a roidb (Region of Interest database) for use in training."""
@@ -110,7 +115,9 @@ class Train:
             # We will handle the snapshots ourselves
             self.saver = tf.train.Saver(max_to_keep=100000)
             # Write the train and validation information to tensorboard
-            # writer = tf.summary.FileWriter(self.tbdir, sess.graph)
+
+            self.tbdir = LOGDIR
+            writer = tf.summary.FileWriter(self.tbdir, sess.graph)
             # valwriter = tf.summary.FileWriter(self.tbvaldir)
 
         # Load weights
@@ -148,20 +155,33 @@ class Train:
             # Get training data, one batch at a time
             blobs = self.data_layer.forward()
 
-            # Compute the graph without summary
-            rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = self.net.train_step(sess, blobs, train_op)
+            # Compute the graph with summary
+            try:
+                # rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = self.net.train_step(sess, blobs, train_op)
+                rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss, summary = self.net.train_step_with_summary(sess, blobs, train_op)
+            except Exception:
+                print('image invalid, skipping')
+                continue
+
             timer.toc()
             iter += 1
 
             # Display training information
             if iter % (cfg.FLAGS.display) == 0:
+                # tensorboard update
+
                 print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
                       '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n ' % \
                       (iter, cfg.FLAGS.max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box))
                 print('speed: {:.3f}s / iter'.format(timer.average_time))
 
+                writer.add_summary(summary, iter)
+
             if iter % cfg.FLAGS.snapshot_iterations == 0:
                 self.snapshot(sess, iter )
+
+
+        writer.close()
 
     def get_variables_in_checkpoint_file(self, file_name):
         try:
