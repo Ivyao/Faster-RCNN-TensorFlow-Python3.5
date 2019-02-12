@@ -1,20 +1,14 @@
-CLASSES = {'__background__':'__background__' ,'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
+CLASSES = {'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
         'electric guitar':'n03272010', 'sax':'n04141076', 'ocarina':'n03840681', 'harmonica':'n03494278',\
         'acoustic guitar':'n02676566', 'trombone':'n04487394','gong':'n03447721',\
         'maraca':'n03720891', 'xylophone':'n03721384', 'pianoforte':'n03928116'}
 
-'''
-Given the wnid of a synset, the URLs of its images can be obtained at
-http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=[wnid]
-'''
 IMGS_URL='http://www.image-net.org/api/text/imagenet.synset.geturls.getmapping?wnid={wnid}'
 ANN_URL='http://www.image-net.org/api/download/imagenet.bbox.synset?wnid={wnid}'
 
 
 TEST = True
 
-
-#n03447721_39009 http://www.musik-klier.de/prods/Stagg-Gong%2020%20klein.jpg
 import requests
 from os import linesep
 import os.path
@@ -74,7 +68,7 @@ def load_imagenet_dataset(partition_names):
             
             try:
                 image_request = http.request('GET', image_url)
-            except BaseException:#, requests.exceptions.ConnectionError,urllib3.exceptions.MaxRetryError): 
+            except BaseException:
                 continue
               
             if image_request.status != 200:
