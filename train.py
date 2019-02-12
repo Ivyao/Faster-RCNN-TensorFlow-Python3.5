@@ -225,8 +225,8 @@ class Train:
 
         return filename, nfilename
 
-
-if __name__ == '__main__':
+DOWNLOAD_IMAGES = True
+if __name__ == '__main__' and not DOWNLOAD_IMAGES:
     train = Train()
     train.train()
 	
