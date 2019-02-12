@@ -7,16 +7,19 @@ IMGS_URL='http://www.image-net.org/api/text/imagenet.synset.geturls.getmapping?w
 ANN_URL='http://www.image-net.org/api/download/imagenet.bbox.synset?wnid={wnid}'
 
 
-TEST = True
+TEST = False
 
 import requests
 from os import linesep
 import os.path
 import logging
 import urllib3
+# disabling security warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from PIL import Image
 from shutil import copyfile
 import random
+import xml.etree.ElementTree as ET
 
 IMAGENET_FOLDER = os.path.join('data', 'imagenet')
 IMAGES_FOLDER = os.path.join(IMAGENET_FOLDER, 'JPEGImages')
@@ -41,8 +44,6 @@ def load_imagenet_dataset(partition_names):
     for code in CLASSES.values():
         image_urls_req = requests.get(IMGS_URL.format(wnid=code))
 
-        # print(image_urls_req)
-
         image_urls_line = image_urls_req.text.split(linesep)
 
         # iterating over each image in the retrieved text file
@@ -58,11 +59,9 @@ def load_imagenet_dataset(partition_names):
             image_id = line_list[0]
             image_url = line_list[1]
 
-            # logging.error('image_id = '+ image_id)
-            # logging.error('image_url = '+ image_url)
-
             # checking if exists the annotation file
-            if not os.path.exists(os.path.join(ANNOTATIONS_FOLDER_SRC, image_id + '.xml')):
+            annotation_filename = os.path.join(ANNOTATIONS_FOLDER_SRC, image_id + '.xml')
+            if not os.path.exists(annotation_filename):
                 # logging.error('annotation does not exist')
                 continue
             
@@ -83,12 +82,25 @@ def load_imagenet_dataset(partition_names):
             if not is_jpg(image_filename):
                 os.remove(image_filename)
                 continue
+
+            # discarding images whose width is not the one specified in the xml
+            root = ET.parse(annotation_filename).getroot()
             
-            copyfile(os.path.join(ANNOTATIONS_FOLDER_SRC, image_id + '.xml'), 
+            # retrieving annotation expected width
+            annotation_width = int(root.find('size/width').text)
+            # calculating real image width
+            real_width = Image.open(image_filename).size[0]
+
+            if real_width != annotation_width:
+                # unmatching width
+                os.remove(image_filename)
+                continue
+
+            copyfile(annotation_filename, 
                     os.path.join(ANNOTATIONS_FOLDER_DST, index_string + '.xml'))
             index+=1
 
-            if index%5 == 0:
+            if index%10 == 0:
                 print("Downloaded " + str(index) + " images")
 
             loaded_images.append((index_string, code, random.randint(0,1)))
@@ -97,6 +109,7 @@ def load_imagenet_dataset(partition_names):
             if TEST and index > 0:
                break
     
+    # saving indexes in partition txts
     part_0 = open(os.path.join(PARTITION_FOLDER, partition_names[0] + '.txt'), 'w')
     part_1 = open(os.path.join(PARTITION_FOLDER, partition_names[1] + '.txt'), 'w')
 
@@ -110,15 +123,21 @@ def load_imagenet_dataset(partition_names):
     part_0.close()
     part_1.close()
     
+    # partitioning dataset
     for class_name in CLASSES.values():
+
+        # opening files
         part_0 = open(os.path.join(PARTITION_FOLDER, class_name + '_' + partition_names[0] + '.txt'), 'w')
         part_1 = open(os.path.join(PARTITION_FOLDER, class_name + '_' + partition_names[1] + '.txt'), 'w')
 
+        # iterating over each image in the dataset
         for elem in loaded_images:
             if elem[2] == 0:
                 part_0.write('{} {}\n'.format(elem[0], 1 if(elem[1] == class_name) else -1))
             else:    
                 part_1.write('{} {}\n'.format(elem[0], 1 if(elem[1] == class_name) else -1))
+        
+        # closing files
         part_0.close()
         part_1.close()
 
