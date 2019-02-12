@@ -58,7 +58,7 @@ def load_imagenet_dataset(partition_names):
             
             # the first element will contain the id of the image, the second one the url        
             if len(line_list) != 2:
-                logging.error(len(line_list))
+                #logging.error(len(line_list))
                 continue
 
             image_id = line_list[0]
@@ -71,22 +71,13 @@ def load_imagenet_dataset(partition_names):
             if not os.path.exists(os.path.join(ANNOTATIONS_FOLDER_SRC, image_id + '.xml')):
                 # logging.error('annotation does not exist')
                 continue
-
-            # retrieving image
+            
             try:
-                image_request = requests.get(image_url)
-            except requests.exceptions.ConnectionError:
+                image_request = http.request('GET', image_url)
+            except BaseException:#, requests.exceptions.ConnectionError,urllib3.exceptions.MaxRetryError): 
                 continue
-            
-            # checking if exists the image in the given url 
-            if image_request.status_code != 200:
-                # logging.error('image problems, code ' + str(image_request.status_code))
-                continue
-
-            image_request = http.request('GET', image_url)
-            
-            # image_request = urllib3.urlopen(image_url)   
-            if image_request.status == 404:
+              
+            if image_request.status != 200:
                 continue
 
             index_string = str(index).zfill(6)

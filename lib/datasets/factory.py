@@ -12,7 +12,7 @@ from __future__ import print_function
 
 __sets = {}
 from lib.datasets.pascal_voc import pascal_voc
-from lib.datasets.coco import coco
+#from lib.datasets.coco import coco
 
 import numpy as np
 
@@ -22,7 +22,7 @@ for year in ['2007', '2012']:
     name = 'voc_{}_{}'.format(year, split)
     # print(name)
     __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
-
+'''
 # Set up coco_2014_<split>
 for year in ['2014']:
   for split in ['train', 'val', 'minival', 'valminusminival', 'trainval']:
@@ -34,7 +34,7 @@ for year in ['2015']:
   for split in ['test', 'test-dev']:
     name = 'coco_{}_{}'.format(year, split)
     __sets[name] = (lambda split=split, year=year: coco(split, year))
-
+'''
 # split is a chosen string like trainval etc
 # name = 'coco_{}_{}'.format(year, split)
 # __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
@@ -45,6 +45,7 @@ for year in ['2007']:
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""
+  print(name)
   if name not in __sets:
     raise KeyError('Unknown dataset: {}'.format(name))
   return __sets[name]()
