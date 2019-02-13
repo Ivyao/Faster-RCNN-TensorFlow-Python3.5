@@ -162,7 +162,7 @@ class Train:
             except Exception:
                 print('image invalid, skipping')
                 continue
-
+            print("passato")
             timer.toc()
             iter += 1
 
@@ -197,6 +197,8 @@ class Train:
     def snapshot(self, sess, iter):
         net = self.net
 
+        #self.output_dir = os.path.join(LOGDIR,"state")
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -225,7 +227,7 @@ class Train:
 
         return filename, nfilename
 
-DOWNLOAD_IMAGES = True
+DOWNLOAD_IMAGES = False
 if __name__ == '__main__' and not DOWNLOAD_IMAGES:
     train = Train()
     train.train()
