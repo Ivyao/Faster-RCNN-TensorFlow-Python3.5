@@ -7,7 +7,7 @@ IMGS_URL='http://www.image-net.org/api/text/imagenet.synset.geturls.getmapping?w
 ANN_URL='http://www.image-net.org/api/download/imagenet.bbox.synset?wnid={wnid}'
 
 
-TEST = True
+TEST = False
 
 import requests
 from os import linesep
