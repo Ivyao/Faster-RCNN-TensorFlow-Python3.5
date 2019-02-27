@@ -29,48 +29,74 @@ from lib.utils.test import im_detect
 from lib.nets.vgg16 import vgg16
 from lib.utils.timer import Timer
 
-CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+DEMO_IMAGES_DIR = "demo_images"
 
-NETS = {'vgg16': ('vgg16_faster_rcnn_iter_70000.ckpt',), 'res101': ('res101_faster_rcnn_iter_110000.ckpt',)}
-DATASETS = {'pascal_voc': ('voc_2007_trainval',), 'pascal_voc_0712': ('voc_2007_trainval+voc_2012_trainval',)}
+CLASSES_DICT = {'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n03801353', \
+        'electric guitar':'n03272010', 'sax':'n04141076', 'ocarina':'n03840681', 'harmonica':'n03494278',\
+        'acoustic guitar':'n02676566', 'trombone':'n04487394','gong':'n03447721',\
+        'maraca':'n03720891', 'xylophone':'n03721384', 'pianoforte':'n03928116'}
+
+CLASSES = ('__background__','n04376400','n03854065','n03801353','n03272010', 
+                                        'n04141076','n03840681','n03494278','n02676566','n04487394',
+                                        'n03447721','n03720891','n03721384','n03928116')
 
 
-def vis_detections(im, class_name, dets, thresh=0.5):
+def save_fig(fig_id, tight_layout=True, fig_extension="png", resolution=300):
+    """ Saves an image with name fig_id"""
+
+    path = os.path.join(DEMO_IMAGES_DIR,"{}.png".format(fig_id))
+    print("Saving figure", fig_id)
+    
+    if tight_layout:
+        plt.tight_layout()
+
+    plt.savefig(path, format=fig_extension, dpi=resolution)
+
+
+def my_vis_detections(im, d, thresh=0.5, image_name = "Null"):
     """Draw detected bounding boxes."""
-    inds = np.where(dets[:, -1] >= thresh)[0]
-    if len(inds) == 0:
-        return
+
+    all_classes = ""
 
     im = im[:, :, (2, 1, 0)]
     fig, ax = plt.subplots(figsize=(12, 12))
     ax.imshow(im, aspect='equal')
-    for i in inds:
-        bbox = dets[i, :4]
-        score = dets[i, -1]
+    
+    for key in d.keys():
+        inds = np.where((d[key])[:, -1] >= thresh)[0]
+        if len(inds) == 0:
+            continue
+        class_name = ""
+        for class_ in CLASSES_DICT.keys():
+            if CLASSES_DICT[class_] == key:
+                class_name = class_
+                break
 
-        ax.add_patch(
-            plt.Rectangle((bbox[0], bbox[1]),
-                          bbox[2] - bbox[0],
-                          bbox[3] - bbox[1], fill=False,
-                          edgecolor='red', linewidth=3.5)
-        )
-        ax.text(bbox[0], bbox[1] - 2,
-                '{:s} {:.3f}'.format(class_name, score),
-                bbox=dict(facecolor='blue', alpha=0.5),
-                fontsize=14, color='white')
+        all_classes += class_name+"_"
+        for i in inds:
+            bbox = d[key][i, :4]
+            score = d[key][i, -1]
+
+            ax.add_patch(
+                plt.Rectangle((bbox[0], bbox[1]),
+                            bbox[2] - bbox[0],
+                            bbox[3] - bbox[1], fill=False,
+                            edgecolor='red', linewidth=3.5)
+            )
+            ax.text(bbox[0], bbox[1] - 2,
+                    '{:s} {:.3f}'.format(class_name, score),
+                    bbox=dict(facecolor='blue', alpha=0.5),
+                    fontsize=14, color='white')
 
     ax.set_title(('{} detections with '
-                  'p({} | box) >= {:.1f}').format(class_name, class_name,
+                  'p({} | box) >= {:.1f}').format(all_classes, all_classes,
                                                   thresh),
                  fontsize=14)
+
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+    save_fig("{}_{}".format(image_name,all_classes))
 
 
 def demo(sess, net, image_name):
@@ -86,10 +112,13 @@ def demo(sess, net, image_name):
     scores, boxes = im_detect(sess, net, im)
     timer.toc()
     print('Detection took {:.3f}s for {:d} object proposals'.format(timer.total_time, boxes.shape[0]))
-
+    #print(scores)
     # Visualize detections for each class
-    CONF_THRESH = 0.1
-    NMS_THRESH = 0.1
+    CONF_THRESH = 0.5
+    NMS_THRESH = 0.2
+    # d is a dictionary that contains as keys the name of the classes, as value dets
+    d = {}
+    #print(scores)
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1  # because we skipped background
         cls_boxes = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
@@ -98,31 +127,20 @@ def demo(sess, net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+        
+        d[cls] = dets
 
 
-def parse_args():
-    """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Tensorflow Faster R-CNN demo')
-    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16 res101]',
-                        choices=NETS.keys(), default='res101')
-    parser.add_argument('--dataset', dest='dataset', help='Trained dataset [pascal_voc pascal_voc_0712]',
-                        choices=DATASETS.keys(), default='pascal_voc_0712')
-    args = parser.parse_args()
-
-    return args
-
+    my_vis_detections(im, d, thresh=CONF_THRESH, image_name = image_name.split(".jpg")[0])
 
 if __name__ == '__main__':
-    args = parse_args()
+    #args = parse_args()
 
     # model path
-    demonet = args.demo_net
-    dataset = args.dataset
-    tfmodel = os.path.join('output', demonet, DATASETS[dataset][0], 'default', NETS[demonet][0])
-
+    demonet = 'vgg16'
+    tfmodel = os.path.join('default','voc_2007_train','default','vgg16_faster_rcnn_iter_9000.ckpt')
+    
     if not os.path.isfile(tfmodel + '.meta'):
-        print(tfmodel)
         raise IOError(('{:s} not found.\nDid you download the proper networks from '
                        'our server and place them properly?').format(tfmodel + '.meta'))
 
@@ -135,22 +153,24 @@ if __name__ == '__main__':
     # load network
     if demonet == 'vgg16':
         net = vgg16(batch_size=1)
-    # elif demonet == 'res101':
-        # net = resnetv1(batch_size=1, num_layers=101)
     else:
         raise NotImplementedError
-    net.create_architecture(sess, "TEST", 21,
+
+    net.create_architecture(sess, "TEST", 14,
                             tag='default', anchor_scales=[8, 16, 32])
+    
+    # restoring from snapshot
     saver = tf.train.Saver()
     saver.restore(sess, tfmodel)
 
     print('Loaded network {:s}'.format(tfmodel))
 
-    im_names = ['000456.jpg', '000457.jpg', '000542.jpg', '001150.jpg',
-                '001763.jpg', '004545.jpg']
+    # test images
+    im_names = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', "5.jpg"]
+    
     for im_name in im_names:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Demo for data/demo/{}'.format(im_name))
         demo(sess, net, im_name)
-
+    
     plt.show()
