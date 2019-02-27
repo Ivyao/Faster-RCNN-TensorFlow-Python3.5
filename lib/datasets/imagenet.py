@@ -3,6 +3,10 @@ CLASSES = {'synthesizer':'n04376400', 'pipe organ':'n03854065', 'music box': 'n0
         'acoustic guitar':'n02676566', 'trombone':'n04487394','gong':'n03447721',\
         'maraca':'n03720891', 'xylophone':'n03721384', 'pianoforte':'n03928116'}
 
+DETECTED_CLASSES = ('__background__','n04376400','n03854065','n03801353','n03272010',
+                    'n04141076','n03840681','n03494278','n02676566','n04487394',
+                    'n03447721','n03720891','n03721384','n03928116')
+
 IMGS_URL='http://www.image-net.org/api/text/imagenet.synset.geturls.getmapping?wnid={wnid}'
 ANN_URL='http://www.image-net.org/api/download/imagenet.bbox.synset?wnid={wnid}'
 

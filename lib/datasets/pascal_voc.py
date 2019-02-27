@@ -21,7 +21,7 @@ from lib.config import config as cfg
 from lib.datasets.imdb import imdb
 from .voc_eval import voc_eval
 from lib.datasets.imagenet import IMAGENET_FOLDER
-from lib.datasets.imagenet import CLASSES
+from lib.datasets.imagenet import CLASSES, DETECTED_CLASSES
 
 class pascal_voc(imdb):
     def __init__(self, image_set, year='', devkit_path=None, imagenet=False):
@@ -34,11 +34,9 @@ class pascal_voc(imdb):
         
         if self.imagenet:
             self._data_path = IMAGENET_FOLDER # os.path.join(self._devkit_path, 'VOC' + self._year)
-            
-            # TODO: check if __background__ should be placed in tuple      
-            self._classes = tuple(['__background__'] + list(CLASSES.values()))
+            self._classes = DETECTED_CLASSES
 
-        else:        
+        else:
             self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)        
             self._classes = ('__background__',  # always index 0
                             'aeroplane', 'bicycle', 'bird', 'boat',
