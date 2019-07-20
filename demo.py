@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
     # model path
     demonet = 'vgg16'
-    tfmodel = os.path.join('default','voc_2007_train','default','vgg16_faster_rcnn_iter_9000.ckpt')
+    tfmodel = os.path.join('default','model.ckpt')
     
     if not os.path.isfile(tfmodel + '.meta'):
         raise IOError(('{:s} not found.\nDid you download the proper networks from '

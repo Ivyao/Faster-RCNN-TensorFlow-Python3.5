@@ -75,7 +75,7 @@ class Train:
         self.imdb, self.roidb = combined_roidb("imagenet_2007_train")
             
         self.data_layer = RoIDataLayer(self.roidb, self.imdb.num_classes)
-        self.output_dir = cfg.get_output_dir(self.imdb, 'default')
+        self.output_dir = 'default'
 
 
     def train(self):
@@ -203,14 +203,13 @@ class Train:
             os.makedirs(self.output_dir)
 
         # Store the model snapshot
-        filename = 'vgg16_faster_rcnn_iter_{:d}'.format(iter) + '.ckpt'
+        filename = 'model.ckpt'
         filename = os.path.join(self.output_dir, filename)
         self.saver.save(sess, filename)
         print('Wrote snapshot to: {:s}'.format(filename))
 
         # Also store some meta information, random state, etc.
-        nfilename = 'vgg16_faster_rcnn_iter_{:d}'.format(iter) + '.pkl'
-        nfilename = os.path.join(self.output_dir, nfilename)
+        nfilename = filename + '.pkl'
         # current state of numpy random
         st0 = np.random.get_state()
         # current position in the database
@@ -227,7 +226,7 @@ class Train:
 
         return filename, nfilename
 
-DOWNLOAD_IMAGES = False
+DOWNLOAD_IMAGES = True
 if __name__ == '__main__' and not DOWNLOAD_IMAGES:
     train = Train()
     train.train()
